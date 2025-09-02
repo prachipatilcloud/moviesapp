@@ -1,4 +1,3 @@
-import * as React from 'react';
 import { styled, alpha } from '@mui/material/styles';
 import AppBar from '@mui/material/AppBar';
 import Box from '@mui/material/Box';
@@ -7,6 +6,10 @@ import Typography from '@mui/material/Typography';
 import InputBase from '@mui/material/InputBase';
 import SearchIcon from '@mui/icons-material/Search';
 import SelectorComponent from '../SelectorComponent';
+import { useDispatch, useSelector } from 'react-redux';
+import { getAllGenres, getAllRatings, getMoviesBySearch } from '../../api/movies';
+import { debounce } from 'lodash';
+import { useEffect } from 'react';
 
 const Search = styled('div')(({ theme }) => ({
   position: 'relative',
@@ -38,7 +41,6 @@ const StyledInputBase = styled(InputBase)(({ theme }) => ({
   color: 'inherit',
   '& .MuiInputBase-input': {
     padding: theme.spacing(1, 1, 1, 0),
-    // vertical padding + font size from searchIcon
     paddingLeft: `calc(1em + ${theme.spacing(4)})`,
     transition: theme.transitions.create('width'),
     width: '100%',
@@ -49,12 +51,22 @@ const StyledInputBase = styled(InputBase)(({ theme }) => ({
 }));
 
 export default function Navbar() {
-  
- 
+  const dispatch = useDispatch();
+
+  useEffect(() => {
+    dispatch(getAllGenres());
+    dispatch(getAllRatings());
+  }, [dispatch]);
+
+  const { genres, ratings } = useSelector((state) => state.movies);
+
+  const onSearchChange = debounce((e) => {
+    dispatch(getMoviesBySearch(e.target.value));
+  }, 500);
 
   return (
     <Box sx={{ flexGrow: 1 }}>
-      <AppBar position="static">
+      <AppBar position="static" sx={{ padding: 1 }}>
         <Toolbar>
           <Typography
             variant="h6"
@@ -64,6 +76,7 @@ export default function Navbar() {
           >
             MoviesApp
           </Typography>
+
           <Search>
             <SearchIconWrapper>
               <SearchIcon />
@@ -71,20 +84,19 @@ export default function Navbar() {
             <StyledInputBase
               placeholder="Search…"
               inputProps={{ 'aria-label': 'search' }}
+              onChange={onSearchChange}
             />
           </Search>
-          <Box sx={{ flexGrow: 1 }} />
-          <Box sx={{ display: { xs: 'none', md: 'flex' } }}>
-            
-            <SelectorComponent />
-            <SelectorComponent />
 
+          <Box sx={{ flexGrow: 1 }} />
+
+          <Box sx={{ display: { xs: 'none', md: 'flex' }, gap: 2 }}>
+            {/* ✅ Pass genres + ratings properly */}
+            <SelectorComponent name="Genres" options={genres} />
+            <SelectorComponent name="Ratings" options={ratings} />
           </Box>
-          
         </Toolbar>
       </AppBar>
-      {/* {renderMobileMenu}
-      {renderMenu} */}
     </Box>
   );
 }
